@@ -1,0 +1,22 @@
+# Build artifacts
+*.o
+*.out
+*.vvp
+*.vcd
+*.pgm
+*.bin
+*.asc
+*.json
+
+# IDE files
+.DS_Store
+*.swp
+*~
+
+# Synthesis outputs
+syn/*.asc
+syn/*.json
+syn/*.bit
+
+# GTKWave
+*.gtkw
