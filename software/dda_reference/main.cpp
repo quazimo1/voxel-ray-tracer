@@ -1,7 +1,7 @@
 #include "voxel_grid.h"
+#include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <cmath>
 
 void testDDA() {
@@ -45,7 +45,7 @@ void testDDA() {
             std::cout << "  HIT at distance: " << hit.distance << std::endl;
             std::cout << "  Position: (" << hit.position.x << ", " << hit.position.y << ", " << hit.position.z << ")" << std::endl;
             std::cout << "  Normal: (" << hit.normal.x << ", " << hit.normal.y << ", " << hit.normal.z << ")" << std::endl;
-            std::cout << "  Material: " << hit.material << std::endl;
+            std::cout << "  Material: " << static_cast<int>(hit.material) << std::endl;
             std::cout << "  Face: " << hit.face << std::endl;
         } else {
             std::cout << "  NO HIT" << std::endl;

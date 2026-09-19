@@ -1,0 +1,4 @@
+read_verilog -sv hardware/rtl/dda_traversal_engine.sv
+synth -top dda_traversal_engine
+check
+stat

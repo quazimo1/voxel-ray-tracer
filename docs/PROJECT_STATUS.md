@@ -1,154 +1,42 @@
-# Project Status: Hardware-Accelerated Voxel Ray Tracer
+# Project status
 
-## ✅ Completed
+## Complete and automated
 
-### 1. Project Setup
-- ✅ Project directory structure created
-- ✅ Comprehensive README with architecture overview
-- ✅ Development roadmap with 4 phases
+- C++17 golden model for 3D voxel DDA traversal
+- Grid-entry handling for rays starting outside the volume
+- Reference scene and PGM renderer
+- Unit tests for hits, misses, arbitrary directions, invalid directions, and invalid grids
+- Synthesizable Q8.8 SystemVerilog DDA engine
+- Bounds checking and configurable traversal limit
+- Ready/valid ray input and request/valid voxel-memory interface
+- Self-checking RTL tests for axis-aligned hits, arbitrary-direction hits, misses, and zero directions
+- CI builds the software, runs both test suites, and invokes Yosys synthesis checks
 
-### 2. Software Reference Implementation (C++)
-- ✅ 3D DDA voxel traversal algorithm implemented
-- ✅ Voxel grid data structure with test scene
-- ✅ Ray tracing with hit detection (position, normal, material, face)
-- ✅ Simple renderer output (PGM format)
-- ✅ Build and test scripts
+## Verified locally
 
-**Location:** `software/dda_reference/`
+- RTL compilation with Icarus Verilog 12
+- All self-checking RTL cases pass
 
-**Results:** Successfully traces rays through voxel grid and detects hits on wood pillars, floors, and other blocks.
+The C++ and Yosys jobs are defined in CI because those toolchains are not installed on the development machine used for the current revision.
 
-### 3. Hardware DDA Engine (SystemVerilog)
-- ✅ Pipelined DDA traversal engine implemented
-- ✅ State machine control (IDLE → INIT → CHECK → HIT/ADVANCE → OUTPUT)
-- ✅ Voxel memory interface
-- ✅ Hit detection with position, material, and face output
-- ✅ Comprehensive testbench with voxel memory model
-- ✅ Simulation verified with iVerilog
+## Deliberately out of scope
 
-**Location:** `hardware/rtl/dda_traversal_engine.sv`
+- Board-specific top level, clocks, reset, and pin constraints
+- Physical FPGA synthesis, place-and-route, timing closure, and measurement
+- PCIe, USB, UART, or another host transport
+- Ray batching and multi-engine scheduling
+- Minecraft world extraction
+- Iris/GLSL integration
+- Lighting, compositing, and a real-time frame pipeline
 
-**Test Results:**
-```
-Test 1: Ray down at wood pillar (5, 4, 5) with dir (0, -1, 0)
-  HIT! Material: 2, Position: (5, 3, 5), Face: 2
+These require a concrete board and integration environment. Until they exist and are measured, this project should be described as a simulation-complete DDA accelerator prototype rather than a finished Minecraft ray tracer.
 
-Test 2: Ray down to floor (7, 5, 7) with dir (0, -1, 0)
-  HIT! Material: 1, Position: (7, 5, 7), Face: 2
+## Next hardware milestone
 
-Test 3: Ray in +Z direction (5, 2, 6) with dir (0, 0, 1)
-  HIT! Material: 2, Position: (5, 2, 5), Face: 5
-```
+Select the FPGA board and host interface, then add:
 
-### 4. Simulation Infrastructure
-- ✅ Automated build/run scripts
-- ✅ VCD waveform generation for GTKWave
-- ✅ Testbench matching C++ reference scene
-- ✅ Debug output for verification
-
-## 📋 Next Steps
-
-### Phase 2: Enhanced Hardware Design
-1. **Full DDA Algorithm Implementation**
-   - Implement proper tMax/tDelta calculations (currently using simplified stepping)
-   - Fixed-point arithmetic for ray direction handling
-   - Support for arbitrary ray directions (not just axis-aligned)
-
-2. **Performance Optimization**
-   - Pipeline the DDA engine for higher throughput
-   - Add multiple traversal units for parallel ray processing
-   - Optimize voxel cache hit rate
-
-3. **Additional Features**
-   - Ray FIFO for batching
-   - Support for secondary rays (reflections, shadows)
-   - Configurable grid sizes
-
-### Phase 3: FPGA Synthesis
-1. **Target Platform**
-   - Recommended: Lattice iCE40 UP5K (iCEBreaker board)
-   - Open-source toolchain: Yosys + nextpnr
-   - No proprietary tools needed
-
-2. **Synthesis Steps**
-   - Add timing constraints
-   - Synthesize with Yosys
-   - Place & route with nextpnr
-   - Generate bitstream
-
-3. **On-Hardware Testing**
-   - Test with actual FPGA board
-   - Compare results with software reference
-   - Measure performance
-
-### Phase 4: Minecraft Integration
-1. **GLSL Shader Development**
-   - Ray generation shader
-   - Hit processing and lighting
-   - Compositing with Minecraft rendering
-
-2. **Host-Side Driver**
-   - FPGA communication layer
-   - Ray batch submission
-   - Result retrieval and synchronization
-
-3. **Full Integration**
-   - Connect shader to FPGA
-   - Extract voxel data from Minecraft world
-   - Real-time ray tracing demo
-
-## 📊 Project Metrics
-
-| Component | Status | Lines of Code | Verified |
-|-----------|--------|---------------|----------|
-| C++ Reference | ✅ Complete | ~250 | ✅ Tested |
-| SystemVerilog DDA | ✅ Basic | ~240 | ✅ Simulated |
-| Testbench | ✅ Complete | ~245 | ✅ Passing |
-| Scripts | ✅ Complete | ~50 | ✅ Working |
-| Documentation | ✅ Complete | ~150 | ✅ Reviewed |
-
-## 🛠️ Tools Used
-
-- **Simulation:** iVerilog + GTKWave (already installed)
-- **Synthesis (Future):** Yosys + nextpnr (open-source)
-- **Compilation:** g++ with C++17 support
-- **Version Control:** Git (recommended)
-
-## 📁 Key Files
-
-```
-voxel_ray_tracer/
-├── README.md                           # Project overview
-├── software/dda_reference/
-│   ├── voxel_grid.h                    # Voxel data structures
-│   ├── voxel_grid.cpp                  # DDA algorithm implementation
-│   ├── main.cpp                        # Test and rendering
-│   └── build_and_run.sh                # Build script
-├── hardware/
-│   ├── rtl/dda_traversal_engine.sv     # Hardware DDA engine
-│   └── tb/tb_dda_traversal_engine.sv   # Testbench
-├── scripts/
-│   └── simulate.sh                     # Simulation runner
-└── docs/
-    └── PROJECT_STATUS.md               # This file
-```
-
-## 💡 Learning Outcomes
-
-Since you're transitioning from graphics software to hardware design, this project teaches:
-
-1. **Algorithm Translation:** Converting software algorithms (C++ DDA) to hardware (SystemVerilog)
-2. **Parallel Thinking:** Understanding pipelining and parallel execution
-3. **Fixed-Point Arithmetic:** Hardware-friendly number representation
-4. **State Machine Design:** Control logic for hardware modules
-5. **Testbench Development:** Verification against golden reference
-6. **Simulation Tools:** iVerilog, GTKWave for debugging
-
-## 🎯 Ultimate Goal
-
-A Minecraft shader that sends rays to an FPGA, which returns hit data for realistic lighting, shadows, and reflections - all accelerated by custom hardware!
-
----
-
-**Current Phase:** Phase 1 Complete ✅
-**Next Step:** Enhance DDA with full algorithm (tMax/tDelta) or start FPGA synthesis
+1. a board top level and constraints;
+2. a voxel-memory implementation;
+3. transport loopback and host-side tests;
+4. timing/resource reports;
+5. on-board comparison against C++ golden vectors.
