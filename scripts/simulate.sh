@@ -1,42 +1,15 @@
-#!/bin/bash
-# Simulation script for DDA Traversal Engine
-# Uses iVerilog and GTKWave (already installed)
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+build_dir="${project_dir}/build/rtl"
+mkdir -p "${build_dir}"
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+iverilog -g2012 -Wall \
+    -s tb_dda_traversal_engine \
+    -o "${build_dir}/dda_tests.vvp" \
+    "${project_dir}/hardware/rtl/dda_traversal_engine.sv" \
+    "${project_dir}/hardware/tb/tb_dda_traversal_engine.sv"
 
-TESTBENCH=${1:-tb_dda_traversal_engine}
-OUTPUT="${SCRIPT_DIR}/${TESTBENCH}.vvp"
-WAVES="${SCRIPT_DIR}/${TESTBENCH}.vcd"
-
-echo "=== Simulating DDA Traversal Engine ==="
-echo "Testbench: $TESTBENCH"
-echo ""
-
-# Compile
-echo "Compiling with iVerilog..."
-iverilog -g2012 -o $OUTPUT \
-    "$PROJECT_DIR/hardware/rtl/dda_traversal_engine.sv" \
-    "$PROJECT_DIR/hardware/tb/${TESTBENCH}.sv"
-
-if [ $? -eq 0 ]; then
-    echo "Compilation successful!"
-    echo ""
-    
-    # Run simulation
-    echo "Running simulation..."
-    vvp $OUTPUT
-    
-    echo ""
-    echo "=== Simulation Complete ==="
-    echo "Waveform saved to: $WAVES"
-    echo ""
-    echo "To view waves in GTKWave:"
-    echo "  gtkwave $WAVES"
-else
-    echo "Compilation failed!"
-    exit 1
-fi
+cd "${build_dir}"
+vvp dda_tests.vvp

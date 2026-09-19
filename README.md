@@ -1,111 +1,84 @@
-# Hardware-Accelerated Voxel Ray Tracer for Minecraft
+# Fixed-Point FPGA Voxel DDA Accelerator
 
-FPGA-accelerated voxel ray tracing for Minecraft with GLSL shader integration.
+A simulation-complete prototype of a voxel traversal accelerator. It pairs a C++ 3D DDA golden model with a synthesizable SystemVerilog implementation and self-checking tests.
 
-## Project Overview
+This repository validates the core accelerator, not an end-to-end Minecraft renderer. FPGA board deployment, host transport, and Minecraft/Iris integration are future work.
 
-This project implements a hardware-accelerated ray tracing engine for Minecraft voxel rendering. The FPGA handles computationally expensive ray-voxel intersection tests using a hardware DDA (Digital Differential Analyzer) traversal engine, while GLSL shaders manage ray generation, lighting, and compositing.
+## What is implemented
 
-### Architecture
+- C++17 voxel grid and 3D DDA reference implementation
+- C++ grid-entry handling for rays originating outside the grid
+- Axis-aligned and arbitrary-direction rays
+- PGM reference renderer
+- Synthesizable fixed-point SystemVerilog traversal engine
+- Request/valid voxel-memory interface
+- Hit position, material, entry face, and distance outputs
+- Self-checking C++ and RTL tests
+- GitHub Actions testing and Yosys synthesis validation
 
-```
-Minecraft → GLSL Shader → Host Driver → FPGA (DDA Engine) → Hit Results → Lighting → Screen
-```
+## Architecture
 
-### Key Components
-
-- **Hardware (SystemVerilog)**: DDA voxel traversal engine, ray scheduler, voxel cache
-- **Shader (GLSL)**: Ray generation, hit processing, lighting, compositing
-- **Software (C++)**: FPGA driver, ray batch management, world data extraction
-
-## Getting Started
-
-### Prerequisites
-
-**Simulation:**
-- iVerilog + GTKWave (already installed)
-- Yosys + nextpnr (for synthesis, optional initially)
-
-**Development:**
-- C++17 compiler (clang/gcc)
-- OpenGL + GLSL support
-- Minecraft with Iris Shaders mod
-
-### Directory Structure
-
-```
-voxel_ray_tracer/
-├── hardware/
-│   ├── rtl/           # SystemVerilog source files
-│   ├── tb/            # Testbenches
-│   ├── syn/           # Synthesis scripts
-│   └── constraints/   # FPGA pin constraints
-├── software/
-│   ├── dda_reference/ # C++ reference DDA implementation
-│   ├── driver/        # FPGA host driver
-│   └── shader/        # GLSL shaders
-├── docs/              # Documentation
-├── test/              # Test data and scripts
-└── scripts/           # Build and simulation scripts
+```text
+Ray source
+    |
+    v
+Fixed-point DDA engine <----> voxel memory
+    |
+    v
+hit/miss + voxel + material + face + distance
 ```
 
-## Development Roadmap
+The RTL interface uses signed Q8.8 values by default:
 
-### Phase 1: Software Prototype
-- [x] Project planning and architecture
-- [ ] C++ reference DDA implementation
-- [ ] Basic GLSL ray tracing shader
-- [ ] Software-only ray tracing demo
+| Signal | Format |
+| --- | --- |
+| Ray origin | signed Q8.8 |
+| Ray direction | signed Q8.8 |
+| Voxel address | signed integer |
+| Hit distance | unsigned Q24.8 |
 
-### Phase 2: Hardware Design
-- [ ] DDA traversal unit (SystemVerilog)
-- [ ] Testbench and simulation
-- [ ] Ray FIFO and scheduler
-- [ ] Top-level integration
+Directions do not need to be normalized. A direction such as `(4, 2, 1)` is valid; the reported distance is expressed in that ray parameterization.
 
-### Phase 3: Integration
-- [ ] Host-side FPGA driver
-- [ ] Shader-FPGA communication
-- [ ] End-to-end pipeline
-- [ ] Performance optimization
+The RTL expects origins inside the voxel volume. A host should clip external rays to the grid boundary before submission; the C++ model provides the required grid-entry behavior.
 
-### Phase 4: Optimization
-- [ ] Pipeline optimization
-- [ ] Visual enhancements
-- [ ] Target: 60+ FPS
+Face IDs are `0=-X`, `1=+X`, `2=-Y`, `3=+Y`, `4=-Z`, and `5=+Z`. Face `7` means the ray began inside an occupied voxel.
 
-## Hardware Target
+## Run everything
 
-**Recommended:** Lattice iCE40 UP5K (iCEBreaker board)
-- Open-source toolchain (Yosys, nextpnr)
-- No vendor lock-in
-- Sufficient resources for initial prototype
+Requirements: CMake, a C++17 compiler, Icarus Verilog, and optionally Yosys.
 
-**Alternative:** Any FPGA with sufficient BRAM for voxel cache
-
-## Building and Simulation
-
-### Run Simulation
 ```bash
-cd hardware
-./scripts/simulate.sh tb_dda_traversal
-gtkwave waves.vcd
+./scripts/test.sh
 ```
 
-### Synthesize (iCE40)
+The script:
+
+1. builds and tests the C++ model;
+2. writes `software/dda_reference/rendered_output.pgm`;
+3. compiles and runs the RTL testbench;
+4. runs a Yosys synthesis check when Yosys is installed.
+
+Run only the RTL simulation with:
+
 ```bash
-cd hardware/syn
-yosys -c synth.ys
-nextpnr-ice40 --up5k --package sg48 --json design.json --asc design.asc
-icepack design.asc design.bin
+./scripts/simulate.sh
 ```
 
-## Resources
+## Repository layout
 
-- [iCE40 Documentation](https://clifford.at/icestorm/)
-- [SystemVerilog Reference](https://ieeexplore.ieee.org/document/8299595)
-- [Iris Shaders](https://irisshaders.net/)
-- [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+```text
+hardware/rtl/                         DDA accelerator
+hardware/tb/                          self-checking RTL testbench
+hardware/syn/synth.ys                 technology-independent synthesis check
+software/dda_reference/               C++ golden model, tests, and renderer
+scripts/test.sh                       complete validation entry point
+scripts/simulate.sh                   RTL-only validation
+docs/PROJECT_STATUS.md                verified status and remaining work
+```
+
+## Scope boundary
+
+The core traversal accelerator is complete at the simulation and generic-synthesis level. Claiming a working FPGA/Minecraft renderer would additionally require a selected board and transport, timing constraints, on-device validation, a host API, world-data extraction, and Iris shader integration. Those components are deliberately not represented as complete.
 
 ## License
 

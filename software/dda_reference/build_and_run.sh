@@ -1,17 +1,11 @@
-#!/bin/bash
-# Build and run the DDA reference implementation
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "=== Building DDA Reference Implementation ==="
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+build_dir="${script_dir}/build"
 
-# Compile
-g++ -std=c++17 -O2 -o dda_reference main.cpp voxel_grid.cpp -lm
-
-if [ $? -eq 0 ]; then
-    echo "Build successful!"
-    echo ""
-    echo "=== Running DDA Reference ==="
-    ./dda_reference
-else
-    echo "Build failed!"
-    exit 1
-fi
+cmake -S "${script_dir}" -B "${build_dir}" -DCMAKE_BUILD_TYPE=Release
+cmake --build "${build_dir}"
+ctest --test-dir "${build_dir}" --output-on-failure
+cd "${script_dir}"
+"${build_dir}/dda_reference"
