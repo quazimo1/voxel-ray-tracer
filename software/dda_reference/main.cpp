@@ -59,8 +59,8 @@ void testDDA() {
     int height = 64;
     std::vector<float> image(width * height, 0.0f);
     
-    Vec3 cameraPos(7.5f, 8.0f, -2.0f);
-    Vec3 lookAt(7.5f, 8.0f, 10.0f);
+    Vec3 cameraPos(7.5f, 6.0f, -4.0f);
+    Vec3 lookAt(7.5f, 1.5f, 7.5f);
     Vec3 up(0, 1, 0);
     
     // Simple camera basis
@@ -72,12 +72,12 @@ void testDDA() {
                       right.z * forward.x - right.x * forward.z,
                       right.x * forward.y - right.y * forward.x);
     
-    float fov = 1.0f;
+    float fov = 0.65f;
     
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float u = (2.0f * (x + 0.5f) / width - 1.0f) * fov;
-            float v = (2.0f * (y + 0.5f) / height - 1.0f) * fov;
+            float v = (1.0f - 2.0f * (y + 0.5f) / height) * fov;
             
             Vec3 dir = forward + right * u + camUp * v;
             HitResult hit = traceRay(grid, cameraPos, dir, 100.0f);

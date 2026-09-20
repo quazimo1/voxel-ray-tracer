@@ -1,5 +1,7 @@
 # Fixed-Point FPGA Voxel DDA Accelerator
 
+[![CI](https://github.com/quazimo1/voxel-ray-tracer/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/quazimo1/voxel-ray-tracer/actions/workflows/ci.yml)
+
 A simulation-complete prototype of a voxel traversal accelerator. It pairs a C++ 3D DDA golden model with a synthesizable SystemVerilog implementation and self-checking tests.
 
 This repository validates the core accelerator, not an end-to-end Minecraft renderer. FPGA board deployment, host transport, and Minecraft/Iris integration are future work.
@@ -42,6 +44,12 @@ Directions do not need to be normalized. A direction such as `(4, 2, 1)` is vali
 The RTL expects origins inside the voxel volume. A host should clip external rays to the grid boundary before submission; the C++ model provides the required grid-entry behavior.
 
 Face IDs are `0=-X`, `1=+X`, `2=-Y`, `3=+Y`, `4=-Z`, and `5=+Z`. Face `7` means the ray began inside an occupied voxel.
+
+## Reference render
+
+![Grayscale voxel scene rendered by the C++ DDA reference implementation](docs/reference-render.png)
+
+This 64×64 image is produced by the tested C++ reference renderer and enlarged with nearest-neighbor scaling for display.
 
 ## Run everything
 
